@@ -22,7 +22,7 @@ class SqsFifoQueue extends SqsQueue
         ];
 
         if($this->isFifoQueue($queue)) {
-            $message['MessageGroupId'] = uniqid();
+            $message['MessageGroupId'] = $this->getMessageGroupId($payload);
             $message['MessageDeduplicationId'] = uniqid();
         }
 
@@ -53,7 +53,7 @@ class SqsFifoQueue extends SqsQueue
         ];
 
         if($this->isFifoQueue($queue)) {
-            $message['MessageGroupId'] = uniqid();
+            $message['MessageGroupId'] = $this->getMessageGroupId($payload);
             $message['MessageDeduplicationId'] = uniqid();
         }
 
@@ -64,4 +64,36 @@ class SqsFifoQueue extends SqsQueue
     {
         return (strpos($this->getQueue($queue), '.fifo') !== FALSE);
     }
+
+    /**
+     * Get additional meta from a payload string.
+     *
+     * @param  string  $payload
+     * @param  string  $key
+     * @param  mixed  $default
+     *
+     * @return mixed
+     */
+    protected function getMeta($payload, $key, $default = null)
+    {
+        $payload = json_decode($payload, true);
+
+        return array_get($payload, $key, $default);
+    }
+
+    /**
+     * Get the meta data to add to the payload.
+     *
+     * @param  mixed  $job
+     *
+     * @return array
+     */
+    protected function getMessageGroupId($job)
+    {
+        if (!is_object($job)) {
+            return uniqid();
+        }
+        return isset($job->messageGroupId) ? $job->messageGroupId : uniqid();
+    }
+
 }
